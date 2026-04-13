@@ -1,0 +1,15 @@
+{
+  "provider": "google",
+  "api_key": "",
+  "openai_model": "gpt-4o-mini",
+  "batch_size": 5,
+  "batch_delay_ms": 200,
+  "translate_messages": true,
+  "translate_names": true,
+  "translate_popups": true,
+  "translate_descriptions": true,
+  "log_untranslated": false,
+  "popup_use_immediate_translate": true,
+  "message_use_immediate_translate": true,
+  "api_min_delay_ms": 0
+}

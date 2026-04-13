@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<genotypes>
+
+  <genotype Name="Mutated Human" DisplayName="Мутировавший человек">
+    <extrainfo Load="Remove">Mutations</extrainfo>
+    <extrainfo Load="Remove">Moderate starting attributes</extrainfo>
+    <extrainfo Load="Remove">-600 reputation with {{C|the Putus Templar}}</extrainfo>
+    <extrainfo>Мутации</extrainfo>
+    <extrainfo>Умеренные начальные атрибуты</extrainfo>
+    <extrainfo>-600 репутации с {{C|Путус Темпларами}}</extrainfo>
+  </genotype>
+
+  <genotype Name="True Kin" DisplayName="Истинный кин">
+    <extrainfo Load="Remove">High starting attributes</extrainfo>
+    <extrainfo Load="Remove">Access to cybernetics</extrainfo>
+    <extrainfo Load="Remove">{{C|20}} bonus skill points each level</extrainfo>
+    <extrainfo Load="Remove">Bonus resistances based on arcology of origin</extrainfo>
+    <extrainfo Load="Remove">May rebuke robots</extrainfo>
+    <extrainfo>Высокие начальные атрибуты</extrainfo>
+    <extrainfo>Доступ к кибернетике</extrainfo>
+    <extrainfo>{{C|20}} бонусных очков навыков за уровень</extrainfo>
+    <extrainfo>Бонусные сопротивления от аркологии происхождения</extrainfo>
+    <extrainfo>Может усмирять роботов</extrainfo>
+  </genotype>
+
+</genotypes>

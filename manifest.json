@@ -1,0 +1,8 @@
+{
+  "ID": "RuLocalization",
+  "Title": "Russian Localization / Русификация",
+  "Description": "Полная русификация Caves of Qud. Переводит интерфейс, диалоги, описания предметов, навыки, мутации, квесты и процедурно генерируемый контент на русский язык.",
+  "Version": "0.1.0",
+  "Author": "RuLocalization Team",
+  "Tags": "Localization"
+}

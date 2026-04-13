@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<embarkmodules>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudGamemodeModule">
+    <window ID="Chargen/Modes" Prefab="HorizScroll" Class="XRL.CharacterBuilds.Qud.UI.QudGamemodeModuleWindow">
+      <title>:выбор режима игры:</title>
+      <name>Режимы игры</name>
+    </window>
+
+    <modes>
+      <mode ID="Tutorial" Title="Обучение">
+        <description>
+          Изучите основы Caves of Qud.
+        </description>
+      </mode>
+
+      <mode ID="Classic" Title="Классика">
+        <description>
+          Перманентная смерть: вы теряете персонажа при гибели.
+        </description>
+      </mode>
+
+      <mode ID="Roleplay" Title="Ролевая игра">
+        <description>
+          Контрольные точки в поселениях.
+        </description>
+      </mode>
+
+      <mode ID="Wander" Title="Странствие">
+        <description>
+          {{c|&#249;}} Большинство существ изначально нейтральны к вам.
+          {{c|&#249;}} Нет опыта за убийства.
+          {{c|&#249;}} Больше опыта за открытия и ритуал воды.
+          {{c|&#249;}} Контрольные точки в поселениях.
+        </description>
+      </mode>
+
+      <mode ID="Daily" Title="Ежедневный" Editable="False">
+        <description>
+          {{c|&#249;}} Одна попытка с фиксированным персонажем и сидом мира.
+          {{c|&#249;}} Сейчас день {{W|{day_of_year}}} из {{W|{year}}}.
+        </description>
+      </mode>
+    </modes>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudChartypeModule">
+    <window ID="Chargen/CharType" Prefab="HorizScroll" Class="XRL.CharacterBuilds.Qud.UI.QudChartypeModuleWindow">
+      <name>Типы персонажей</name>
+      <title>:выбор типа персонажа:</title>
+    </window>
+
+    <types>
+      <type ID="Pregen" Title="Готовые">
+        <description>
+          Выберите одного из готовых персонажей. Когда освоитесь, сможете их настроить.
+        </description>
+      </type>
+
+      <type ID="New" Title="Новый">
+        <description>
+          Создать нового персонажа.
+        </description>
+      </type>
+
+      <type ID="Random" Title="Случайный">
+        <description>
+          Сгенерировать случайного персонажа.
+        </description>
+      </type>
+
+      <type ID="Library" Title="Библиотека">
+        <description>
+          Выбрать персонажа из библиотеки сборок.
+        </description>
+      </type>
+
+      <type ID="Last" Title="Последний">
+        <description>
+          Повторить последнего сыгранного персонажа.
+        </description>
+      </type>
+    </types>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudBuildLibraryModule">
+    <window ID="Chargen/BuildLibrary" Prefab="HorizScroll" Class="XRL.CharacterBuilds.Qud.UI.QudBuildLibraryModuleWindow">
+      <name>Библиотека сборок</name>
+      <title>:библиотека сборок:</title>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudGenotypeModule">
+    <window ID="Chargen/ChooseGenotypes" Prefab="HorizScroll" Class="XRL.CharacterBuilds.Qud.UI.QudGenotypeModuleWindow">
+      <name>Генотипы</name>
+      <title>:выбор генотипа:</title>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudPregenModule">
+    <window ID="Chargen/Pregens" Prefab="HorizScroll" Class="XRL.CharacterBuilds.Qud.UI.QudPregenModuleWindow">
+      <name>Готовые персонажи</name>
+      <title>:выбор готового персонажа:</title>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudSubtypeModule">
+    <window ID="Chargen/ChooseSubtypes" Prefab="HorizScroll" Class="XRL.CharacterBuilds.Qud.UI.QudSubtypeModuleWindow">
+      <name>Подтипы</name>
+      <title>:выбор подтипа:</title>
+    </window>
+    <window ID="Chargen/ChooseSubtypesCategory" Prefab="SwitchingScroller" Class="XRL.CharacterBuilds.Qud.UI.QudSubtypeModuleCategoryWindow">
+      <name>Подтипы (категории)</name>
+      <title>:выбор подтипа:</title>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudMutationsModule">
+    <window ID="Chargen/Mutations" Prefab="CategoryMenus" Class="XRL.CharacterBuilds.Qud.UI.QudMutationsModuleWindow">
+      <name>Мутации</name>
+      <title>:выбор мутаций:</title>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudAttributesModule">
+    <window ID="Chargen/PickAttributes" Prefab="HorizScrollerScroller" Class="XRL.CharacterBuilds.Qud.UI.QudAttributesModuleWindow">
+      <title>:выбор атрибутов:</title>
+      <name>Атрибуты</name>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudCyberneticsModule">
+    <window ID="Chargen/Cybernetic" Prefab="CategoryMenus" Class="XRL.CharacterBuilds.Qud.UI.QudCyberneticsModuleWindow">
+      <name>Кибернетика</name>
+      <title>:выбор кибернетического импланта:</title>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudBuildSummaryModule">
+    <window ID="Chargen/BuildSummary" Prefab="HorizScroll" Class="XRL.CharacterBuilds.Qud.UI.QudBuildSummaryModuleWindow">
+      <name>Итог</name>
+      <title>:итог сборки:</title>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudCustomizeCharacterModule">
+    <window ID="Chargen/Customize" Prefab="VertScroll" Class="XRL.CharacterBuilds.Qud.UI.QudCustomizeCharacterModuleWindow">
+      <name>Настройка</name>
+      <title>:настройка персонажа:</title>
+    </window>
+  </module>
+
+  <module Class="XRL.CharacterBuilds.Qud.QudChooseStartingLocationModule">
+    <window ID="Chargen/ChooseStartingLocation" Prefab="HorizScroll" Class="XRL.CharacterBuilds.Qud.UI.QudChooseStartingLocationModuleWindow">
+      <name>Начальная локация</name>
+      <title>:выбор начальной локации:</title>
+    </window>
+
+    <locations>
+      <location ID="Joppa" Name="{{Y|Джоппа}}">
+        <description>
+          Рекомендуется для новых игроков.
+        </description>
+      </location>
+
+      <location ID="SaltMarshVillage" Name="деревня в&#10;{{G|солёных болотах}}">
+        <description>
+          {{c|&#249;}} Случайная деревня в солёных болотах.
+          {{c|&#249;}} Деревня обучает Сбору урожая.
+          {{c|&#249;}} +50 репутации с насекомыми и рыбами.
+          {{c|&#249;}} Начинаете с парой {{g|крокка{{G|с}}ин}}.
+        </description>
+      </location>
+
+      <location ID="SaltDuneVillage" Name="деревня в&#10;{{Y|солёных дюнах}}">
+        <description>
+          {{c|&#249;}} Случайная деревня в солёных дюнах.
+          {{c|&#249;}} Деревня обучает Пути поста.
+          {{c|&#249;}} +100 репутации с рептилиями.
+          {{c|&#249;}} Начинаете с {{Y|Иссач{{r|а}}ри}} знаменем.
+        </description>
+      </location>
+
+      <location ID="DesertCanyonsVillage" Name="деревня в&#10;{{W|пустынном каньоне}}">
+        <description>
+          {{c|&#249;}} Случайная деревня в пустынных каньонах.
+          {{c|&#249;}} Деревня обучает Ориентированию.
+          {{c|&#249;}} +50 репутации с лошадьми, черепахами и лозами.
+        </description>
+      </location>
+
+      <location ID="HillsVillage" Name="деревня в&#10;{{Y|холмах}}">
+        <description>
+          {{c|&#249;}} Случайная деревня в холмах.
+          {{c|&#249;}} Деревня обучает Разделке.
+          {{c|&#249;}} +100 репутации с отшельниками.
+          {{c|&#249;}} Начинаете с {{r|окровавленным}} шейным кольцом.
+        </description>
+      </location>
+
+      <location ID="JoppaTutorial" Name="затонувший караван-сарай" Set="Tutorial" ExcludeFromDaily="Yes">
+        <description>
+          Вы прибываете на окраины Куда.
+        </description>
+      </location>
+    </locations>
+  </module>
+
+</embarkmodules>
