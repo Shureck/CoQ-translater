@@ -34,6 +34,16 @@ RESPONSE_SCHEMA = {
     "required": ["translation", "source_unchanged_tokens"],
     "additionalProperties": False,
 }
+DEFAULT_SYSTEM_PROMPT = (
+    "Ты профессиональный локализатор Caves of Qud (EN -> RU). "
+    "Переводи художественно и точно, сохраняя стиль оригинала. "
+    "Никогда не меняй плейсхолдеры и служебные маркеры: {{...}}, $variable, <spice...>, "
+    "XML/JSON синтаксис, числа, escape-последовательности. "
+    "Не добавляй пояснений. Отвечай строго в JSON по заданной схеме. "
+    "Критично: не сокращай и не обобщай исходный текст. "
+    "Сохраняй все факты, перечисления, отношения между фракциями, предметы экипировки, "
+    "физические особенности, оценки отношения и весь смысл каждого предложения."
+)
 
 
 try:
@@ -218,37 +228,6 @@ def parse_model_json_content(content: str):
     return translation.strip(), tokens
 
 
-def count_letters(text: str) -> int:
-    return sum(1 for ch in text if ch.isalpha())
-
-
-def seems_lossy_translation(source: str, translated: str) -> bool:
-    if not source or not translated:
-        return True
-
-    src_lines = [line.strip() for line in source.splitlines() if line.strip()]
-    tr_lines = [line.strip() for line in translated.splitlines() if line.strip()]
-
-    if len(src_lines) >= 2 and len(tr_lines) < len(src_lines):
-        return True
-
-    if "\n" in source and "\n" not in translated:
-        return True
-
-    src_letters = count_letters(source)
-    tr_letters = count_letters(translated)
-    if src_letters >= 80 and tr_letters < int(src_letters * 0.45):
-        return True
-
-    if "-----" in source and "-----" not in translated:
-        return True
-
-    if ":" in source and ":" not in translated and source.count(":") >= 2:
-        return True
-
-    return False
-
-
 def call_lmstudio_chat(text: str, source_lang: str, target_lang: str):
     base_url = LM_CONFIG["base_url"].rstrip("/")
     url = base_url + "/chat/completions"
@@ -256,6 +235,7 @@ def call_lmstudio_chat(text: str, source_lang: str, target_lang: str):
     payload = {
         "model": LM_CONFIG["model"],
         "messages": [
+            {"role": "system", "content": LM_CONFIG["system_prompt"]},
             {"role": "user", "content": text},
         ],
         "temperature": 0,
@@ -294,33 +274,6 @@ def call_lmstudio_chat(text: str, source_lang: str, target_lang: str):
     content = (msg.get("content") or "").strip()
     translation, tokens = parse_model_json_content(content)
     return translation, tokens
-
-
-def translate_with_integrity(source_text: str, source_lang: str, target_lang: str):
-    translated, tokens = call_lmstudio_chat(source_text, source_lang, target_lang)
-    if not seems_lossy_translation(source_text, translated):
-        return translated, tokens
-
-    lines = source_text.splitlines()
-    rebuilt = []
-    all_tokens = []
-    for line in lines:
-        if not line.strip():
-            rebuilt.append(line)
-            continue
-        if should_bypass_translation(line):
-            rebuilt.append(line)
-            continue
-        line_tr, line_tokens = call_lmstudio_chat(line, source_lang, target_lang)
-        rebuilt.append(line_tr if line_tr else line)
-        if line_tokens:
-            all_tokens.extend(line_tokens)
-
-    rebuilt_text = "\n".join(rebuilt).strip()
-    if not rebuilt_text:
-        rebuilt_text = translated
-
-    return rebuilt_text, all_tokens
 
 
 class TranslateHandler(BaseHTTPRequestHandler):
@@ -366,17 +319,14 @@ class TranslateHandler(BaseHTTPRequestHandler):
             log_line(f"[{now()}] [req:{request_id}] in {source_lang}->{target_lang}: \"{compact_text(text)}\"")
             cached = db_get_translation(source_lang, target_lang, text)
             if cached is not None:
-                if seems_lossy_translation(text, cached):
-                    log_line(f"[{now()}] [req:{request_id}] cache-lossy, retranslate")
-                else:
-                    log_line(f"[{now()}] [req:{request_id}] cache-hit: \"{compact_text(cached)}\"")
-                    self._send_json(
-                        200,
-                        {"translation": cached, "source_unchanged_tokens": [], "cached": True},
-                    )
-                    return
+                log_line(f"[{now()}] [req:{request_id}] cache-hit: \"{compact_text(cached)}\"")
+                self._send_json(
+                    200,
+                    {"translation": cached, "source_unchanged_tokens": [], "cached": True},
+                )
+                return
 
-            translated, unchanged_tokens = translate_with_integrity(text, source_lang, target_lang)
+            translated, unchanged_tokens = call_lmstudio_chat(text, source_lang, target_lang)
             db_put_translation(source_lang, target_lang, text, translated)
             log_line(f"[{now()}] [req:{request_id}] out: \"{compact_text(translated)}\"")
             self._send_json(
@@ -426,6 +376,7 @@ def main():
     parser.add_argument("--api-key", default="")
     parser.add_argument("--timeout-sec", type=int, default=60)
     parser.add_argument("--max-tokens", type=int, default=512)
+    parser.add_argument("--system-prompt", default=DEFAULT_SYSTEM_PROMPT)
     args = parser.parse_args()
 
     init_db()
@@ -434,6 +385,7 @@ def main():
     LM_CONFIG["api_key"] = args.api_key
     LM_CONFIG["timeout_sec"] = args.timeout_sec
     LM_CONFIG["max_tokens"] = args.max_tokens
+    LM_CONFIG["system_prompt"] = args.system_prompt
 
     log_line(f"[{now()}] [gemma-server] sqlite cache: {DB_PATH}")
     log_line(f"[{now()}] [gemma-server] backend: {args.base_url}")
