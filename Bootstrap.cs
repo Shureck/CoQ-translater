@@ -26,8 +26,11 @@ namespace RuLocalization
                 try
                 {
                     if (mod.Harmony != null)
+                    {
                         ManualPopupRegistration.Register(mod.Harmony);
-                    MetricsManager.LogInfo("RuLocalization: ручные Popup-патчи применены");
+                        RenderPipelineRegistration.Register(mod.Harmony);
+                    }
+                    MetricsManager.LogInfo("RuLocalization: Popup и render-патчи применены");
                 }
                 catch (Exception e)
                 {

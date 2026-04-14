@@ -1,5 +1,5 @@
 {
-  "provider": "google",
+  "provider": "local_hf",
   "api_key": "",
   "openai_model": "gpt-4o-mini",
   "batch_size": 5,
@@ -11,5 +11,20 @@
   "log_untranslated": false,
   "popup_use_immediate_translate": true,
   "message_use_immediate_translate": true,
-  "api_min_delay_ms": 0
+  "local_hf_service_url": "http://127.0.0.1:5005/translate",
+  "local_hf_timeout_ms": 30000,
+  "api_min_delay_ms": 0,
+  "ui_render_translation": true,
+  "ui_render_diagnostics": true,
+  "ui_diagnostics_min_interval_ms": 10000,
+  "ui_status_indicator_enabled": true,
+  "ui_status_interval_ms": 5000,
+  "ui_marker_enabled": true,
+  "ui_marker_source_text": "OPTIONS",
+  "ui_marker_translated_text": "[RU TEST] НАСТРОЙКИ",
+  "ui_render_max_queue_chars": 140,
+  "ui_render_max_markup_chars": 80,
+  "ui_render_max_uitext_chars": 2200,
+  "ui_render_use_immediate_small": false,
+  "ui_render_immediate_max_chars": 96
 }
