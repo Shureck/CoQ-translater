@@ -22,6 +22,8 @@ namespace RuLocalization
                 MetricsManager.LogInfo("RuLocalization: запуск инициализации...");
                 TranslationEngine.Instance.Initialize(mod.Path);
                 MetricsManager.LogInfo($"RuLocalization: движок готов. Кэш: {TranslationEngine.Instance.CacheCount} записей");
+                UiMainThreadDispatcher.Install();
+                UiReloadOverlayButton.Install();
 
                 try
                 {

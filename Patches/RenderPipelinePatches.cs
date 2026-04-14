@@ -135,22 +135,22 @@ namespace RuLocalization.Patches
         [ThreadStatic]
         private static int _depth;
 
-        public static void FirstStringPrefix(MethodBase __originalMethod, ref string __0)
+        public static void FirstStringPrefix(MethodBase __originalMethod, object __instance, ref string __0)
         {
-            ApplyByIndex(__originalMethod, 0, ref __0);
+            ApplyByIndex(__originalMethod, __instance, 0, ref __0);
         }
 
-        public static void SecondStringPrefix(MethodBase __originalMethod, ref string __1)
+        public static void SecondStringPrefix(MethodBase __originalMethod, object __instance, ref string __1)
         {
-            ApplyByIndex(__originalMethod, 1, ref __1);
+            ApplyByIndex(__originalMethod, __instance, 1, ref __1);
         }
 
-        public static void ThirdStringPrefix(MethodBase __originalMethod, ref string __2)
+        public static void ThirdStringPrefix(MethodBase __originalMethod, object __instance, ref string __2)
         {
-            ApplyByIndex(__originalMethod, 2, ref __2);
+            ApplyByIndex(__originalMethod, __instance, 2, ref __2);
         }
 
-        private static void ApplyByIndex(MethodBase originalMethod, int index, ref string value)
+        private static void ApplyByIndex(MethodBase originalMethod, object instance, int index, ref string value)
         {
             if (string.IsNullOrEmpty(value) || _depth > 0)
                 return;
@@ -159,6 +159,7 @@ namespace RuLocalization.Patches
             try
             {
                 var source = originalMethod?.DeclaringType?.FullName + "." + originalMethod?.Name + $"(arg{index})";
+                TranslationEngine.Instance.TrackUiTextBinding(source, instance, value);
                 var translated = TranslationEngine.Instance.TranslateScreenText(value, source);
                 if (!string.Equals(translated, value, StringComparison.Ordinal))
                     value = translated;

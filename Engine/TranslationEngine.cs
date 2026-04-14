@@ -3,10 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using RuLocalization.Patches;
 
 namespace RuLocalization
 {
@@ -25,6 +28,8 @@ namespace RuLocalization
         private readonly ConcurrentDictionary<string, string> _cache = new ConcurrentDictionary<string, string>();
         private readonly ConcurrentQueue<PendingTranslation> _pendingQueue = new ConcurrentQueue<PendingTranslation>();
         private readonly ConcurrentDictionary<string, byte> _pendingKeys = new ConcurrentDictionary<string, byte>();
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<int, UiTextBinding>> _uiTextBindings =
+            new ConcurrentDictionary<string, ConcurrentDictionary<int, UiTextBinding>>(StringComparer.Ordinal);
         private ITranslationProvider _provider;
         private string _cachePath;
         private string _configPath;
@@ -36,6 +41,7 @@ namespace RuLocalization
         private int _apiCalls;
         private int _pendingCount;
         private DateTime _lastSave = DateTime.MinValue;
+        private MethodInfo _uiTextSkinSetTextMethod;
 
         [ThreadStatic]
         private static int _translateDepth;
@@ -294,6 +300,27 @@ namespace RuLocalization
             SaveCache();
         }
 
+        public void ReloadUiTranslations()
+        {
+            int removed = 0;
+            while (_pendingQueue.TryDequeue(out var item))
+            {
+                if (item != null && !string.IsNullOrEmpty(item.Key))
+                    _pendingKeys.TryRemove(item.Key, out _);
+                removed++;
+            }
+
+            _cache.Clear();
+            _pendingKeys.Clear();
+            _uiDecisionLogTimes.Clear();
+            Interlocked.Exchange(ref _pendingCount, 0);
+            SaveCache();
+
+            var message = $"[RuLocalization] UI reload requested, cache cleared, dropped queue={removed}";
+            MetricsManager.LogInfo(message);
+            TryPostMessage(message);
+        }
+
         private bool IsKindEnabled(TranslationKind kind)
         {
             switch (kind)
@@ -421,6 +448,7 @@ namespace RuLocalization
                         _cache[item.Key] = translated;
                         Interlocked.Increment(ref _apiCalls);
                         MaybeThrottleApi();
+                        QueueUiBindingRefresh(item.Key, translated);
                     }
                 }
                 catch (Exception e)
@@ -441,6 +469,113 @@ namespace RuLocalization
             var d = _config.ApiMinDelayMs;
             if (d > 0)
                 Thread.Sleep(d);
+        }
+
+        public void TrackUiTextBinding(string source, object instance, string originalText)
+        {
+            if (instance == null || string.IsNullOrEmpty(originalText))
+                return;
+            if (string.IsNullOrEmpty(source) || source.IndexOf("XRL.UI.UITextSkin.SetText", StringComparison.OrdinalIgnoreCase) < 0)
+                return;
+
+            var key = NormalizeKey(originalText);
+            if (string.IsNullOrEmpty(key))
+                return;
+
+            var perKey = _uiTextBindings.GetOrAdd(key, _ => new ConcurrentDictionary<int, UiTextBinding>());
+            var id = RuntimeHelpers.GetHashCode(instance);
+            perKey[id] = new UiTextBinding
+            {
+                Target = new WeakReference(instance),
+                OriginalText = originalText
+            };
+        }
+
+        private void QueueUiBindingRefresh(string key, string translated)
+        {
+            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(translated))
+                return;
+            if (!_uiTextBindings.TryGetValue(key, out var perKey) || perKey.IsEmpty)
+                return;
+
+            UiMainThreadDispatcher.Enqueue(() =>
+            {
+                try
+                {
+                    if (_uiTextSkinSetTextMethod == null)
+                    {
+                        _uiTextSkinSetTextMethod = AppDomain.CurrentDomain.GetAssemblies()
+                            .SelectMany(a =>
+                            {
+                                try { return a.GetTypes(); } catch { return new Type[0]; }
+                            })
+                            .FirstOrDefault(t => t != null && t.FullName == "XRL.UI.UITextSkin")
+                            ?.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                            .Where(m => m.Name == "SetText")
+                            .Where(m =>
+                            {
+                                var ps = m.GetParameters();
+                                return ps.Length > 0 && ps[0].ParameterType == typeof(string);
+                            })
+                            .OrderBy(m => m.GetParameters().Length)
+                            .FirstOrDefault();
+                    }
+                    if (_uiTextSkinSetTextMethod == null)
+                        return;
+
+                    foreach (var kv in perKey.ToArray())
+                    {
+                        var binding = kv.Value;
+                        if (binding?.Target == null || !binding.Target.IsAlive || binding.Target.Target == null)
+                        {
+                            perKey.TryRemove(kv.Key, out _);
+                            continue;
+                        }
+
+                        var target = binding.Target.Target;
+                        var formatted = ColorTagParser.TransferTags(binding.OriginalText, translated);
+                        var ps = _uiTextSkinSetTextMethod.GetParameters();
+                        var args = new object[ps.Length];
+                        args[0] = formatted;
+                        for (int i = 1; i < ps.Length; i++)
+                            args[i] = ps[i].HasDefaultValue ? ps[i].DefaultValue : (ps[i].ParameterType.IsValueType ? Activator.CreateInstance(ps[i].ParameterType) : null);
+                        _uiTextSkinSetTextMethod.Invoke(target, args);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MetricsManager.LogError("RuLocalization: UI live refresh failed", e);
+                }
+            });
+        }
+
+        private static void TryPostMessage(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return;
+            try
+            {
+                var add = typeof(XRL.Messages.MessageQueue)
+                    .GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                    .FirstOrDefault(m =>
+                    {
+                        if (m.Name != "Add")
+                            return false;
+                        var ps = m.GetParameters();
+                        return ps.Length > 0 && ps[0].ParameterType == typeof(string);
+                    });
+                if (add == null)
+                    return;
+                var ps2 = add.GetParameters();
+                var args = new object[ps2.Length];
+                args[0] = text;
+                for (int i = 1; i < ps2.Length; i++)
+                    args[i] = ps2[i].HasDefaultValue ? ps2[i].DefaultValue : (ps2[i].ParameterType.IsValueType ? Activator.CreateInstance(ps2[i].ParameterType) : null);
+                add.Invoke(null, args);
+            }
+            catch
+            {
+            }
         }
 
         private string NormalizeKey(string text)
@@ -877,6 +1012,12 @@ namespace RuLocalization
     {
         public string Key;
         public string Original;
+    }
+
+    internal class UiTextBinding
+    {
+        public WeakReference Target;
+        public string OriginalText;
     }
 
     public class TranslationConfig
